@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>女军人智能诊疗系统</title>
+
+<style>
+/* 基础与排版 - 采用更具专业感和军医元素的配色 */
+:root {
+    --primary: #005E54; /* 稳重的军绿/深青色调 */
+    --primary-light: #E8F5E9;
+    --primary-hover: #004d45;
+    --bg-color: #F2F2F7;
+    --card-bg: #FFFFFF;
+    --text-main: #1C1C1E;
+    --text-sec: #8E8E93;
+    --success: #4CAF50;
+    --warning: #FF9800;
+    --danger: #F44336;
+}
+
+body {
+    margin: 0;
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.wrapper { transform-origin: center; }
+.phone {
+    width: 375px; height: 780px; background: #000;
+    border-radius: 50px; border: 14px solid #000;
+    box-shadow: 0 0 0 2px #333, 0 30px 60px rgba(0,0,0,0.5);
+    box-sizing: content-box; position: relative;
+}
+
+.screen {
+    width: 100%; height: 100%; background: var(--bg-color);
+    border-radius: 36px; overflow: hidden; position: relative;
+}
+
+.status-bar {
+    height: 47px; padding: 0 24px; display: flex;
+    justify-content: space-between; align-items: center;
+    font-size: 14px; font-weight: 600; color: var(--text-main);
+    z-index: 100; position: relative; background: rgba(242,242,247,0.8);
+    backdrop-filter: blur(10px);
+}
+
+.page {
+    position: absolute; top: 47px; left: 0;
+    width: 100%; height: calc(100% - 47px);
+    box-sizing: border-box; overflow-y: auto;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(10px);
+}
+.page.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+.card {
+    background: var(--card-bg); border-radius: 20px;
+    padding: 20px; margin: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+h2 { margin-top: 0; font-size: 22px; color: var(--text-main); }
+
+button {
+    width: 100%; padding: 14px; border-radius: 14px; border: none;
+    background: var(--primary); color: white; font-size: 16px;
+    font-weight: 600; margin-top: 16px; cursor: pointer; transition: all 0.2s;
+}
+button:active { transform: scale(0.97); opacity: 0.9; }
+button.secondary { background: #E5E5EA; color: var(--text-main); }
+
+input {
+    width: 100%; padding: 14px 16px; margin-top: 12px;
+    border-radius: 12px; border: 1px solid #E5E5EA; background: #FAFAFA;
+    font-size: 15px; box-sizing: border-box; outline: none; transition: 0.2s;
+}
+input:focus { border-color: var(--primary); background: #FFF; }
+
+/* 聊天/问答专属 UI */
+.chat-container { display: flex; flex-direction: column; height: 100%; }
+.chat-box { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
+.msg-wrapper { display: flex; width: 100%; flex-direction: column; }
+.msg-wrapper.ai { align-items: flex-start; }
+.msg-wrapper.user { align-items: flex-end; }
+.msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
+.msg.ai { background: white; color: var(--text-main); border-bottom-left-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.msg.user { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+
+/* 结构化医疗诊断卡片 */
+.medical-card {
+    background: #FAFAFA;
+    border: 1px solid #E5E5EA;
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.medical-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid #E5E5EA;
+    padding-bottom: 8px;
+}
+.medical-section {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+.medical-section-label {
+    font-weight: 600;
+    color: var(--text-main);
+    display: block;
+    margin-bottom: 4px;
+}
+/* 安抚/相似案例专属样式 */
+.comfort-box {
+    background: #E8F5E9;
+    border-left: 4px solid var(--success);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 13.5px;
+    color: #1B5E20;
+    line-height: 1.6;
+}
+.comfort-box strong { color: var(--primary); }
+
+.quick-replies { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; white-space: nowrap; }
+.quick-replies::-webkit-scrollbar { display: none; }
+.quick-reply-btn { background: var(--primary-light); color: var(--primary); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid rgba(0,94,84,0.1); cursor: pointer;}
+.quick-reply-btn:active { background: #d0e8d3; }
+
+.chat-input-area { display: flex; padding: 12px 16px 24px; gap: 10px; background: white; border-top: 1px solid #E5E5EA; align-items: center; }
+.chat-input-area input { margin: 0; border-radius: 20px; flex: 1; }
+.chat-input-area button { width: auto; margin: 0; padding: 10px 20px; border-radius: 20px; }
+
+.toast {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.8); color: white; padding: 10px 20px;
+    border-radius: 20px; font-size: 14px; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s; z-index: 1000;
+}
+.toast.show { opacity: 1; }
+
+/* 战备状态选择UI */
+.deployment-selector { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+.deployment-btn {
+    padding: 12px; border: 1.5px solid #E5E5EA; border-radius: 12px;
+    background: white; cursor: pointer; font-size: 14px; transition: all 0.2s; text-align: left;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.deployment-btn.selected {
+    border-color: var(--primary); background: var(--primary-light); font-weight: 600; color: var(--primary);
+}
+.deployment-btn.selected::after { content: "✓"; font-weight: bold; }
+
+/* 档案记录卡片美化 */
+.record-card {
+    background: white; border-radius: 14px; padding: 16px; margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06); position: relative; overflow: hidden;
+}
+.record-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+}
+.record-card.status-healing::before { background: var(--warning); }
+.record-card.status-recovered::before { background: var(--success); }
+.record-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.record-title { font-weight: 600; font-size: 15px; color: var(--text-main); }
+.record-date { font-size: 12px; color: var(--text-sec); margin-top: 4px; }
+.status-badge { 
+    padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; 
+}
+.status-badge.healing { background: #FFF3E0; color: #E65100; }
+.status-badge.recovered { background: #E8F5E9; color: #2E7D32; }
+
+/* 进度条美化 */
+.progress-container { margin: 12px 0; }
+.progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-sec); margin-bottom: 6px; }
+.progress-track { width: 100%; height: 6px; background: #E5E5EA; border-radius: 4px; overflow: hidden; }
+.progress-bar { height: 100%; transition: width 0.4s ease; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="wrapper" id="wrapper">
+<div class="phone">
+<div class="screen">
+
+<div class="status-bar">
+    <span id="clock">9:41</span>
+    <span>无网络 🔋</span>
+</div>
+
+<div id="home" class="page active">
+    <div class="card" style="margin-top: 40px; background: linear-gradient(135deg, #005E54 0%, #003b35 100%); color: white; border-radius: 24px;">
+        <h2 style="color: white; font-size: 24px;">女军人健康管家</h2>
+        <p style="color: rgba(255,255,255,0.8); font-size: 14px;">保障卫国戍边力量的身心健康</p>
+    </div>
+    <div style="padding: 0 16px;">
+        <button onclick="go('chat')" style="box-shadow: 0 4px 12px rgba(0,94,84,0.3);">💬 开始智能问诊</button>
+        <button class="secondary" onclick="go('tongue')">👅 视觉舌象辅诊</button>
+        <button class="secondary" onclick="go('psychology')">🧠 心理健康评估</button>
+        <button class="secondary" onclick="go('archive')">📂 个人健康档案</button>
+    </div>
+</div>
+
+<div id="chat" class="page" style="padding: 0;">
+    <div class="chat-container">
+        <div class="chat-header" style="padding: 10px 16px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid #E5E5EA; display: flex; align-items: center; position: relative; z-index: 10;">
+            <button class="secondary" style="width: auto; padding: 6px 14px; margin: 0; font-size: 14px; border-radius: 10px;" onclick="go('home')">返回</button>
+            <h2 style="margin: 0; font-size: 17px; font-weight: 600; position: absolute; left: 50%; transform: translateX(-50%);">智能问诊</h2>
+        </div>
+        <div class="chat-box" id="chatBox">
+            <div class="msg-wrapper ai">
+                <div class="msg ai">您好，同志。我是专属AI诊疗助手。请描述您的症状，我会结合军事医疗数据库为您分析，并提供战友康复案例供参考。</div>
+            </div>
+        </div>
+        
+        <div class="quick-replies">
+            <div class="quick-reply-btn" onclick="sendMsg('最近野外驻训，出汗多，感觉局部瘙痒并伴有异味')">驻训期局部瘙痒</div>
+            <div class="quick-reply-btn" onclick="sendMsg('最近体能训练强度很大，生理期推迟了十多天还没来')">高强度训练致经期异常</div>
+            <div class="quick-reply-btn" onclick="sendMsg('下腹部有坠痛感，白带呈黄绿色')">下腹坠痛/白带异常</div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="输入症状描述或上传检查单..." onkeypress="if(event.key === 'Enter') handleSend()">
+            <input type="file" id="consultImageInput" accept="image/*" style="display:none;" onchange="previewConsultImage()">
+            <button class="secondary" onclick="document.getElementById('consultImageInput').click()" style="width:auto; padding: 10px; margin:0; border-radius: 50%;">📷</button>
+            <button onclick="handleSend()">发送</button>
+        </div>
+        <div id="imagePreview" style="padding:10px 16px; max-height:100px; display:none; background:white; border-top:1px solid #E5E5EA; align-items: center; gap: 10px;">
+            <img id="previewImg" style="height:60px; border-radius:8px; display:none; border: 1px solid #ddd;">
+            <span style="font-size: 13px; color: var(--text-sec); cursor: pointer;" onclick="clearImagePreview()">✕ 取消图片</span>
+        </div>
+    </div>
+</div>
+
+<div id="tongue" class="page">
+    <div class="card">
+        <h2>视觉模型辅诊</h2>
+        <p style="color: #8E8E93; font-size: 14px;">上传舌部图像提取特征信息</p>
+        <div style="position: relative;">
+            <input type="file" id="tongueInput" accept="image/*" style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+            <div style="padding: 40px 20px; border: 2px dashed #ccc; border-radius: 12px; text-align: center; background: #fafafa;">
+                <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
+                <div style="font-size: 14px; color: #666;">点击此处上传舌象图片</div>
+            </div>
+        </div>
+        <button onclick="tongueInference()">提交分析</button>
+        <div id="tongueRes" style="margin-top:20px;"></div>
+        <button class="secondary" onclick="go('home')">返回主页</button>
+    </div>
+</div>
+
+<div id="psychology" class="page">
+    <div class="card">
+        <h2>心理健康评估</h2>
+        <p style="color: #8E8E93; font-size: 14px;">综合心理状态自评问卷</p>
+        <div id="psychologyForm"></div>
+        <button id="submitPsychology" style="display:none;" onclick="submitPsychologyAssessment()">提交评估</button>
+        <div id="psychologyResult" style="margin-top:20px;"></div>
+        <button class="secondary" onclick="go('home')">返回主页</button>
+    </div>
+</div>
+
+<div id="archive" class="page">
+    <div class="card" style="background: transparent; box-shadow: none; padding: 0 16px; margin: 16px 0;">
+        <h2 style="margin-bottom: 4px;">健康档案</h2>
+        <p style="color: #8E8E93; font-size: 13px; margin-top: 0; margin-bottom: 16px;">跟踪您的康复进度与历史记录</p>
+        <div id="recordsList"></div>
+        <button class="secondary" style="margin-top: 24px;" onclick="go('home')">返回主页</button>
+    </div>
+</div>
+
+<div id="toast" class="toast">提示</div>
+
+</div>
+</div>
+</div>
+
+<script>
+/* 自适应缩放 */
+function resize() {
+    let scale = Math.min(window.innerWidth / 375, window.innerHeight / 812);
+    document.getElementById("wrapper").style.transform = `scale(${scale})`;
+}
+window.addEventListener("resize", resize);
+resize();
+
+/* 状态栏时钟 */
+setInterval(() => {
+    let d = new Date();
+    document.getElementById("clock").innerText = d.getHours() + ":" + String(d.getMinutes()).padStart(2, '0');
+}, 1000);
+
+let currentDeployment = "基地";
+
+/* 页面切换 */
+function go(id){
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    if(id === 'chat') { showDeploymentSelector(); }
+    if(id === 'archive') { displayRecords(); }
+    if(id === 'psychology') { initPsychologyForm(); }
+}
+
+/* 战备状态数据 */
+const deploymentTypes = {
+    "基地": { risk: 1.0, impact: "0%" },
+    "高海拔驻训": { risk: 1.3, impact: "8-12%" },
+    "边区服役": { risk: 1.25, impact: "10-15%" },
+    "长时间值班": { risk: 1.2, impact: "5-8%" },
+    "野外潜伏": { risk: 1.4, impact: "15-20%" }
+};
+
+const recoveryDataset = [
+    { disease: "真菌/细菌性阴道炎", baseRecovery: 14, deployment: "基地", actualRecovery: 12 },
+    { disease: "真菌/细菌性阴道炎", baseRecovery: 14, deployment: "高海拔驻训", actualRecovery: 21 },
+    { disease: "内分泌应激性波动", baseRecovery: 21, deployment: "基地", actualRecovery: 18 },
+    { disease: "内分泌应激性波动", baseRecovery: 21, deployment: "边区服役", actualRecovery: 28 },
+    { disease: "盆腔炎", baseRecovery: 7, deployment: "基地", actualRecovery: 7 },
+    { disease: "盆腔炎", baseRecovery: 7, deployment: "野外潜伏", actualRecovery: 12 }
+];
+
+function predictRecoveryTime(diagnosis) {
+    let diagKey = diagnosis.split("|")[0].substring(3);
+    let matching = recoveryDataset.filter(d => d.disease.includes(diagKey) && d.deployment === currentDeployment);
+    if(matching.length > 0) {
+        return matching[0].actualRecovery;
+    }
+    let baseMatching = recoveryDataset.filter(d => d.disease.includes(diagKey) && d.deployment === "基地");
+    if(baseMatching.length > 0) {
+        let base = baseMatching[0].actualRecovery;
+        let riskFactor = deploymentTypes[currentDeployment]?.risk || 1.0;
+        return Math.ceil(base * riskFactor);
+    }
+    return 14;
+}
+
+/* 核心优化：加入了类似案例（安抚属性） */
+const mockDatabase = [
+    {
+        keywords: ["驻训", "野外", "痒", "异味", "出汗"],
+        disease: "疑似野外环境致真菌/细菌感染",
+        advice: "野外卫生条件受限时易发。建议使用配发的外用抗菌洗液，尽量保持患处干燥。若伴有发热或症状3天未缓解，请向军医报备。",
+        similarCase: "请放心，近期驻训期间有3位战友遇到过完全相同的情况。在使用配发洗液并注意局部卫生后，通常在1-2周内即可彻底痊愈，不会影响后续的演训任务。"
+    },
+    {
+        keywords: ["训练", "推迟", "没来", "异常", "体能"],
+        disease: "高强度训练致内分泌应激性波动",
+        advice: "高强度考核易引起下丘脑-垂体-卵巢轴功能暂时性紊乱。建议考核后适当补充营养，保证睡眠。若连续两个周期未至，需安排B超检查。",
+        similarCase: "这是高强度体能周期的常见生理保护机制。去年比武期间，有近15%的女同志出现了相似的周期推迟。考核结束后，随着身体疲劳缓解，90%以上都在一个月内自然恢复了正常规律，不必过度焦虑。"
+    },
+    {
+        keywords: ["坠痛", "黄绿", "疼"],
+        disease: "疑似盆腔或宫颈感染",
+        advice: "此类症状需引起重视。建议暂时降低大运动量训练，尽快前往驻地医院进行常规及妇科超声检查，避免延误病情。",
+        similarCase: "此类急性炎症在尽早干预后恢复极快。之前某连指导员出现同样症状，经过卫生连开具的3天抗生素靶向治疗后疼痛明显消失，2周后复查完全康复。请及时就医即可。"
+    },
+    {
+        keywords: ["乳房", "胀痛", "肿块", "肿胀"],
+        disease: "疑似乳腺增生或纤维瘤",
+        advice: "【建议干预】：训练期激素波动易发。建议定期自查，若肿块增大或疼痛加剧，及时进行乳腺超声检查。保持良好作息，避免过度疲劳。"
+    },
+    {
+        keywords: ["尿频", "尿急", "尿痛", "小便"],
+        disease: "疑似尿路感染",
+        advice: "【建议干预】：野外或训练环境易发。多饮水，保持卫生。若伴有发热或血尿，请立即就医，避免发展为肾盂肾炎。"
+    },
+    {
+        keywords: ["头晕", "乏力", "贫血", "低血糖"],
+        disease: "疑似缺铁性贫血或低血糖",
+        advice: "【建议干预】：高强度训练易导致营养不足。建议补充铁剂和维生素，调整饮食。若症状持续，需抽血检查血常规。"
+    },
+    {
+        keywords: ["关节", "疼痛", "肿胀", "运动损伤"],
+        disease: "疑似关节炎或运动损伤",
+        advice: "【建议干预】：过度训练易损伤关节。建议休息，避免负重，局部冰敷。若疼痛剧烈或关节变形，需X光检查。"
+    },
+    {
+        keywords: ["病历", "医学记录", "就诊", "诊断书", "病历本"],
+        disease: "病历信息上传与分析",
+        advice: "【病历分析】：您上传的病历已收录。系统已从病历中识别出主要诊断和医嘱，并记入您的健康档案。请遵医嘱用药和复诊。"
+    },
+    {
+        keywords: ["化验单", "血液检查", "白细胞", "红细胞", "血红蛋白", "血糖", "血脂", "检查报告", "B超", "心电图"],
+        disease: "实验室检查报告分析 - 淋巴细胞占比上升",
+        advice: "【血象分析】：您的血液检查显示淋巴细胞占比上升（正常范围20-40%）。【医学解读】：淋巴细胞升高提示以下可能性：(1)病毒感染：如感冒、EBV感染等；(2)免疫激活：高强度训练或压力应激可引发生理性淋巴细胞增加；(3)某些细菌感染。【建议干预】：1)观察是否伴有发热、咽痛等上呼吸道症状；2)加强营养补充，增强免疫力；3)保证充足睡眠，避免过度疲劳；4)如淋巴细胞继续升高或伴有其他异常，需复查血象并咨询医生。【战斗力评估】：当前建议适当降低训练强度，待指标恢复正常后再恢复正常训练。"
+    }
+];
+
+// 健康档案数据
+let healthRecords = [
+    {
+        date: "2026-03-15",
+        symptom: "驻训期局部瘙痒",
+        diagnosis: "疑似野外环境致真菌/细菌感染",
+        advice: "建议使用配发的外用抗菌洗液，保持干燥。",
+        deployment: "边区服役",
+        predictedRecovery: 14,
+        status: "治疗中",
+        image: "",
+        completionPercent: 50
+    },
+    {
+        date: "2026-02-28",
+        symptom: "高强度训练致经期异常",
+        diagnosis: "高强度训练致内分泌应激性波动",
+        advice: "适当补充营养，保证睡眠。",
+        deployment: "基地",
+        predictedRecovery: 18,
+        status: "已恢复",
+        completionPercent: 100
+    }
+];
+
+function showDeploymentSelector() {
+    let chatBox = document.getElementById("chatBox");
+    let existingSelector = chatBox.querySelector(".deployment-selector");
+    if(!existingSelector) {
+        let wrapper = document.createElement("div");
+        wrapper.className = "msg-wrapper ai";
+        
+        let msg = document.createElement("div");
+        msg.className = "msg ai";
+        msg.style.padding = "0";
+        msg.style.background = "transparent";
+        msg.style.boxShadow = "none";
+        
+        let header = document.createElement("div");
+        header.style.marginBottom = "8px";
+        header.style.fontSize = "14px";
+        header.style.color = "var(--text-sec)";
+        header.innerText = "为了提供更准的恢复期预估，请确认您当前的任务环境：";
+        
+        let selDiv = document.createElement("div");
+        selDiv.className = "deployment-selector";
+        Object.keys(deploymentTypes).forEach(type => {
+            let btn = document.createElement("div");
+            btn.className = `deployment-btn ${type === '基地' ? 'selected' : ''}`;
+            btn.innerHTML = `<span>${type}</span>`;
+            btn.onclick = () => selectDeployment(btn, type);
+            selDiv.appendChild(btn);
+        });
+        
+        msg.appendChild(header);
+        msg.appendChild(selDiv);
+        wrapper.appendChild(msg);
+        chatBox.insertBefore(wrapper, chatBox.children[1]);
+    }
+}
+
+function selectDeployment(btn, type) {
+    currentDeployment = type;
+    document.querySelectorAll(".deployment-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+}
+
+function clearImagePreview() {
+    document.getElementById("consultImageInput").value = "";
+    document.getElementById("imagePreview").style.display = "none";
+}
+
+function previewConsultImage() {
+    let fileInput = document.getElementById("consultImageInput");
+    if(fileInput.files.length > 0) {
+        let file = fileInput.files[0];
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let previewImg = document.getElementById("previewImg");
+            previewImg.src = e.target.result;
+            previewImg.style.display = "block";
+            document.getElementById("imagePreview").style.display = "flex";
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function handleSend() {
+    let input = document.getElementById("chatInput");
+    let imageInput = document.getElementById("consultImageInput");
+    let text = input.value.trim();
+    if(text !== "" || imageInput.files.length > 0) {
+        sendMsg(text, imageInput.files.length > 0 ? imageInput.files[0] : null);
+        input.value = "";
+        clearImagePreview();
+    }
+}
+
+function sendMsg(text, imageFile) {
+    let box = document.getElementById("chatBox");
+    let imageData = null;
+
+    if (!text.trim() && imageFile) {
+        text = "我已上传病历/化验单，请帮我解析";
+    }
+
+    // 构建用户消息卡片
+    let wrapper = document.createElement("div");
+    wrapper.className = "msg-wrapper user";
+    let msgNode = document.createElement("div");
+    msgNode.className = "msg user";
+    msgNode.innerText = text ? text : "上传了检查影像";
+
+    if(imageFile) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            imageData = e.target.result;
+            let img = document.createElement("img");
+            img.src = imageData;
+            img.style.maxWidth = "100%";
+            img.style.borderRadius = "8px";
+            img.style.marginTop = "8px";
+            msgNode.appendChild(img);
+        };
+        reader.readAsDataURL(imageFile);
+    }
+
+    wrapper.appendChild(msgNode);
+    box.appendChild(wrapper);
+    box.scrollTop = box.scrollHeight;
+
+    // 模拟等待和分析状态
+    let typingWrapper = document.createElement("div");
+    typingWrapper.className = "msg-wrapper ai typing";
+    typingWrapper.innerHTML = `<div class="msg ai" style="color:var(--text-sec); font-size:13px;">正在查阅军医知识库...</div>`;
+    box.appendChild(typingWrapper);
+    box.scrollTop = box.scrollHeight;
+
+    setTimeout(() => {
+        box.removeChild(typingWrapper);
+        let matchedRecord = null;
+
+        // 匹配逻辑
+        let isMedicalDoc = /病历|化验单|检查报告|医学记录|血液检查|白细胞|红细胞|血红蛋白|血糖|血脂|B超|心电图/.test(text);
+        for(let record of mockDatabase) {
+            let matchCount = record.keywords.filter(kw => text.includes(kw)).length;
+            let requiredCount = isMedicalDoc ? 1 : 2;
+            if(matchCount >= requiredCount) {
+                matchedRecord = record;
+                break;
+            }
+        }
+
+        let aiWrapper = document.createElement("div");
+        aiWrapper.className = "msg-wrapper ai";
+        let aiMsg = document.createElement("div");
+        aiMsg.className = "msg ai";
+        aiMsg.style.width = "90%";
+        aiMsg.style.padding = "0"; // 移除内边距，让卡片撑满
+        aiMsg.style.background = "transparent";
+        aiMsg.style.boxShadow = "none";
+
+        if(matchedRecord) {
+            let riskImpact = deploymentTypes[currentDeployment]?.impact || "0%";
+            let warningText = riskImpact !== "0%" ? `<div style="color:var(--danger); font-size:12px; margin-top:6px;">⚠️ 当前环境影响预估：体能可能下降 ${riskImpact}</div>` : '';
+
+            // 结构化卡片渲染
+            aiMsg.innerHTML = `
+                <div class="medical-card">
+                    <div class="medical-card-title">🩺 智能辅诊报告</div>
+                    <div class="medical-section">
+                        <span class="medical-section-label">初步评估：</span>
+                        <span style="color:var(--text-main);">${matchedRecord.disease}</span>
+                    </div>
+                    <div class="medical-section" style="margin-bottom:0;">
+                        <span class="medical-section-label">医疗建议：</span>
+                        <span style="color:var(--text-sec);">${matchedRecord.advice}</span>
+                        ${warningText}
+                    </div>
+                </div>
+                ${matchedRecord.similarCase ? `<div class="comfort-box"><strong>💡 战友康复案例：</strong><br>${matchedRecord.similarCase}</div>` : ''}
+                <button style="margin-top:12px; border-radius:12px; font-size:15px;" 
+                    onclick="addToArchive('${text}', '${matchedRecord.disease}', '${matchedRecord.advice}', '${imageData || ''}')">
+                    💾 归档至健康记录
+                </button>
+            `;
+        } else {
+            aiMsg.className = "msg ai"; // 恢复普通气泡样式
+            aiMsg.style.padding = "12px 16px";
+            aiMsg.style.background = "white";
+            aiMsg.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
+            aiMsg.innerText = "初步分析未匹配到典型高危特征。野外环境请务必注意饮水和休息。如果症状持续加重，请立即前往卫生队就诊。";
+        }
+
+        aiWrapper.appendChild(aiMsg);
+        box.appendChild(aiWrapper);
+        box.scrollTop = box.scrollHeight;
+
+    }, 1200);
+}
+
+function addToArchive(symptom, diagnosis, advice, image = "") {
+    let date = new Date().toISOString().split('T')[0];
+    let predictedDays = predictRecoveryTime(diagnosis);
+    let record = {
+        date: date,
+        symptom: symptom.length > 10 ? symptom.substring(0,10) + "..." : symptom,
+        diagnosis: diagnosis,
+        advice: advice,
+        deployment: currentDeployment,
+        predictedRecovery: predictedDays,
+        status: "治疗中",
+        image: image,
+        completionPercent: 10
+    };
+    healthRecords.unshift(record); // 加到最前面
+    showToast('已安全归档至个人健康档案');
+}
+
+/* 视觉舌象辅诊美化 */
+function tongueInference(){
+    let fileInput = document.getElementById("tongueInput");
+    if (!fileInput.files.length) { showToast("请先点击虚线框选择舌象图像"); return; }
+    
+    let resDiv = document.getElementById("tongueRes");
+    resDiv.innerHTML = "<div style='text-align:center; color:var(--text-sec);'>正在运行视觉大模型提取特征...</div>";
+    
+    let file = fileInput.files[0];
+    let reader = new FileReader();
+    reader.onload = function (e) {
+        let imageData = e.target.result;
+        setTimeout(() => {
+            resDiv.innerHTML = `
+                <div class="medical-card">
+                    <div class="medical-card-title">👁️ 舌象特征提取结果</div>
+                    <img src="${imageData}" style="width:100%; border-radius:8px; margin-bottom:12px;">
+                    <div class="medical-section">
+                        <span class="medical-section-label">特征识别：</span>
+                        舌质红，苔黄腻。
+                    </div>
+                    <div class="medical-section">
+                        <span class="medical-section-label">多模态分析：</span>
+                        提示体内存在湿热下注（常见于炎症发作期）。建议多饮水，饮食清淡。
+                    </div>
+                </div>
+                <button style="margin-top:12px;" onclick="addToArchive('舌象自检', '舌质红，苔黄腻', '多饮水，饮食清淡', '${imageData}')">保存至档案</button>
+            `;
+        }, 1500);
+    };
+    reader.readAsDataURL(file);
+}
+
+/* 健康档案 UI 美化呈现 */
+function displayRecords() {
+    let list = document.getElementById("recordsList");
+    list.innerHTML = "";
+    
+    if(healthRecords.length === 0) {
+        list.innerHTML = `
+            <div style="text-align:center; padding: 40px 0; color: var(--text-sec);">
+                <div style="font-size: 40px; margin-bottom:10px;">📭</div>
+                暂无健康记录，继续保持良好状态！
+            </div>`;
+        return;
+    }
+    
+    healthRecords.forEach((record, idx) => {
+        let daysAgo = Math.floor((new Date() - new Date(record.date)) / 86400000);
+        let progress = record.completionPercent || 0;
+        let isRecovered = record.status === "已恢复" || progress >= 100;
+        
+        let cardStatusClass = isRecovered ? "status-recovered" : "status-healing";
+        let badgeClass = isRecovered ? "recovered" : "healing";
+        
+        let item = document.createElement("div");
+        item.className = `record-card ${cardStatusClass}`;
+        
+        let imageHtml = record.image ? `<img src="${record.image}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; border:1px solid #eee; margin-right:12px;">` : '';
+        
+        item.innerHTML = `
+            <div class="record-header">
+                <div>
+                    <div class="record-title">${record.diagnosis}</div>
+                    <div class="record-date">${record.date} · 发生于 ${record.deployment}</div>
+                </div>
+                <div class="status-badge ${badgeClass}">${record.status}</div>
+            </div>
+            
+            <div style="display:flex; margin-bottom:12px;">
+                ${imageHtml}
+                <div style="flex:1; font-size:13px; color:var(--text-sec); line-height:1.5;">
+                    <strong>症状：</strong>${record.symptom}<br>
+                    <strong>医嘱：</strong>${record.advice}
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>康复进度评估</span>
+                    <span style="color:${isRecovered ? 'var(--success)' : 'var(--primary)'}; font-weight:600;">${progress}%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-bar" style="width: ${progress}%; background: ${isRecovered ? 'var(--success)' : 'var(--primary)'};"></div>
+                </div>
+            </div>
+            
+            <div style="text-align:right;">
+                <button class="secondary" style="width:auto; padding:6px 12px; margin:0; font-size:12px; border-radius:6px; font-weight:500;" onclick="editRecordStatus(${idx})">
+                    更新康复进度 ✏️
+                </button>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function showToast(message) {
+    let toast = document.getElementById('toast');
+    toast.innerText = message;
+    toast.classList.add('show');
+    setTimeout(() => { toast.classList.remove('show'); }, 2500);
+}
+
+/* 修改状态弹窗代码保留不变，因其功能完整，但修改了部分色值适配新UI */
+function editRecordStatus(index) {
+  let modalHTML = `
+    <div style='position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(3px);' id='statusModal'>
+      <div style='background:white; border-radius:24px; padding:24px; width:85%; max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.2);'>
+        <h3 style='margin:0 0 20px 0; font-size:18px; color:#1C1C1E; text-align:center;'>更新康复进度</h3>
+        
+        <div style='margin-bottom:20px;'>
+          <label style='display:block; font-size:13px; font-weight:600; color:#666; margin-bottom:10px;'>当前状态</label>
+          <div style='display:flex; gap:10px;'>
+            <button onclick='updateStatus(${index}, "治疗中")' style='flex:1; padding:12px 0; border:1.5px solid var(--primary); background:${healthRecords[index].status === "治疗中" ? "var(--primary)" : "white"}; color:${healthRecords[index].status === "治疗中" ? "white" : "var(--primary)"}; border-radius:12px; cursor:pointer; font-size:13px; font-weight:600;'>治疗中</button>
+            <button onclick='updateStatus(${index}, "已恢复")' style='flex:1; padding:12px 0; border:1.5px solid var(--primary); background:${healthRecords[index].status === "已恢复" ? "var(--primary)" : "white"}; color:${healthRecords[index].status === "已恢复" ? "white" : "var(--primary)"}; border-radius:12px; cursor:pointer; font-size:13px; font-weight:600;'>已恢复</button>
+          </div>
+        </div>
+        
+        <div style='margin-bottom:24px;'>
+          <label style='display:block; font-size:13px; font-weight:600; color:#666; margin-bottom:10px;'>恢复百分比</label>
+          <div style='display:flex; gap:12px; align-items:center;'>
+            <input type='range' id='recoveryProgressInput' min='0' max='100' value='${healthRecords[index].completionPercent || 0}' style='flex:1; height:6px; border-radius:3px; outline:none;' oninput='updateProgressDisplay()'>
+            <span id='progressValue' style='min-width:40px; text-align:right; font-weight:bold; color:var(--primary); font-size:16px;'>${healthRecords[index].completionPercent || 0}%</span>
+          </div>
+        </div>
+        
+        <div style='display:flex; gap:12px;'>
+          <button onclick='closeStatusModal()' style='flex:1; padding:14px; background:#E5E5EA; color:var(--text-main); border:none; border-radius:14px; cursor:pointer; font-size:15px; margin:0;'>取消</button>
+          <button onclick='confirmStatusUpdate(${index})' style='flex:1; padding:14px; background:var(--primary); color:white; border:none; border-radius:14px; cursor:pointer; font-size:15px; margin:0;'>确定保存</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+let pendingStatusIndex = -1;
+let pendingStatusValue = "";
+
+function updateProgressDisplay() {
+  let slider = document.getElementById('recoveryProgressInput');
+  document.getElementById('progressValue').textContent = slider.value + '%';
+}
+
+function updateStatus(index, status) {
+  pendingStatusIndex = index;
+  pendingStatusValue = status;
+  let buttons = document.querySelectorAll('#statusModal button:not(#recoveryProgressInput)');
+  document.querySelectorAll('#statusModal').forEach(modal => {
+    modal.querySelectorAll('button').forEach(btn => {
+      if(btn.textContent.trim() === status) {
+        btn.style.background = "var(--primary)";
+        btn.style.color = "white";
+      } else if(btn.textContent.trim() === "治疗中" || btn.textContent.trim() === "已恢复") {
+        btn.style.background = "white";
+        btn.style.color = "var(--primary)";
+      }
+    });
+  });
+}
+
+function confirmStatusUpdate(index) {
+  let newPercent = parseInt(document.getElementById('recoveryProgressInput').value);
+  if(newPercent >= 0 && newPercent <= 100) {
+    healthRecords[index].completionPercent = newPercent;
+    if(newPercent === 100) pendingStatusValue = "已恢复"; // 满进度自动转为已恢复
+  }
+  if(pendingStatusIndex >= 0 && pendingStatusValue) {
+    healthRecords[index].status = pendingStatusValue;
+  }
+  displayRecords();
+  showToast("康复进度已更新");
+  closeStatusModal();
+}
+
+function closeStatusModal() {
+  let modal = document.getElementById('statusModal');
+  if (modal) modal.remove();
+  pendingStatusIndex = -1;
+  pendingStatusValue = "";
+}
+
+/* 占位保留原心理测试代码 */
+/* 心理评估问卷 - 针对女军人的综合心理健康量表 */
+const psychologyQuestions = [
+    {
+        category: "情绪管理",
+        question: "近两周，您感到心情沮丧、抑郁的频率？",
+        options: ["从未（0分）", "偶尔（1分）", "有时（2分）", "经常（3分）", "几乎总是（4分）"]
+    },
+    {
+        category: "情绪管理",
+        question: "近两周，您感到焦虑、紧张不安的程度？",
+        options: ["完全没有（0分）", "轻微（1分）", "中等（2分）", "明显（3分）", "极其严重（4分）"]
+    },
+    {
+        category: "压力应对",
+        question: "在面对军事训练压力时，您的适应能力？",
+        options: ["非常好（0分）", "较好（1分）", "一般（2分）", "较差（3分）", "很差（4分）"]
+    },
+    {
+        category: "压力应对",
+        question: "您对目前的工作和生活状态的满意度？",
+        options: ["非常满意（0分）", "满意（1分）", "一般（2分）", "不满意（3分）", "非常不满意（4分）"]
+    },
+    {
+        category: "人际关系",
+        question: "您与战友/团队的沟通和协作怎样？",
+        options: ["非常和谐（0分）", "和谐（1分）", "一般（2分）", "有些紧张（3分）", "非常紧张（4分）"]
+    },
+    {
+        category: "人际关系",
+        question: "您感受到的来自领导和战友的支持程度？",
+        options: ["充分支持（0分）", "有支持（1分）", "一般（2分）", "支持不足（3分）", "完全缺乏（4分）"]
+    },
+    {
+        category: "睡眠健康",
+        question: "您的睡眠质量如何？",
+        options: ["很好（0分）", "较好（1分）", "一般（2分）", "较差（3分）", "很差（4分）"]
+    },
+    {
+        category: "睡眠健康",
+        question: "您是否经历失眠或夜间频繁清醒？",
+        options: ["从未（0分）", "偶尔（1分）", "有时（2分）", "经常（3分）", "几乎每晚（4分）"]
+    },
+    {
+        category: "身体症状",
+        question: "您是否经历头痛、肌肉紧张等躯体症状？",
+        options: ["没有（0分）", "轻微（1分）", "中等（2分）", "明显（3分）", "严重（4分）"]
+    },
+    {
+        category: "身体症状",
+        question: "您的性激素相关症状（月经不调、乳房胀痛等）？",
+        options: ["完全正常（0分）", "轻微异常（1分）", "有所异常（2分）", "明显异常（3分）", "严重异常（4分）"]
+    }
+];
+
+const psychologyInterpretation = {
+    excellent: {
+        range: "0-10",
+        level: "心理健康状态优秀",
+        color: "#4CAF50",
+        advice: "🌟 您的心理状态很好！请继续保持良好的生活习惯、定期运动、与他人沟通。建议每月自测一次保持健康状态。"
+    },
+    good: {
+        range: "11-20",
+        level: "心理健康状态良好",
+        color: "#66BB6A",
+        advice: "👍 您的心理状况总体良好。建议加强压力管理，增加户外活动，保证充足睡眠。定期与同志沟通交流，互相支持。"
+    },
+    moderate: {
+        range: "21-30",
+        level: "心理健康状态中等",
+        color: "#FFC107",
+        advice: "⚠️ 您的心理状态需要关注。建议：1)主动与心理卫生人员沟通 2)参加减压活动 3)确保睡眠质量 4)加强体育锻炼。"
+    },
+    poor: {
+        range: "31-40",
+        level: "心理健康状态欠佳",
+        color: "#FF9800",
+        advice: "🔴 建议立即与心理咨询师或卫生连医生沟通。您可能正面临较大压力，专业支持将帮助您改善状态。"
+    },
+    critical: {
+        range: "41+",
+        level: "心理健康状态需紧急关注",
+        color: "#F44336",
+        advice: "🚨 强烈建议立即寻求专业心理健康帮助。请联系卫生连、心理咨询科或军医，不要独自承受压力。您的健康很重要！"
+    }
+};
+
+function initPsychologyForm() {
+    let form = document.getElementById("psychologyForm");
+    form.innerHTML = "";
+    
+    let categoryGroups = {};
+    psychologyQuestions.forEach((q, idx) => {
+        if(!categoryGroups[q.category]) {
+            categoryGroups[q.category] = [];
+        }
+        categoryGroups[q.category].push({index: idx, question: q});
+    });
+    
+    Object.keys(categoryGroups).forEach(category => {
+        let categoryDiv = document.createElement("div");
+        categoryDiv.style.marginBottom = "20px";
+        categoryDiv.innerHTML = `<div style='font-weight:600; color:var(--primary); margin-bottom:12px; font-size:14px;'>📋 ${category}</div>`;
+        
+        categoryGroups[category].forEach(item => {
+            let q = item.question;
+            let idx = item.index;
+            let qDiv = document.createElement("div");
+            qDiv.style.marginBottom = "16px";
+            qDiv.style.padding = "12px";
+            qDiv.style.background = "#F9F9F9";
+            qDiv.style.borderRadius = "8px";
+            qDiv.innerHTML = `<div style='font-size:13px; font-weight:500; margin-bottom:8px;'>${idx + 1}. ${q.question}</div>`;
+            
+            let optionsDiv = document.createElement("div");
+            optionsDiv.style.display = "flex";
+            optionsDiv.style.flexDirection = "column";
+            optionsDiv.style.gap = "8px";
+            optionsDiv.style.width = "100%";
+            
+            q.options.forEach((option, optIdx) => {
+                let labelDiv = document.createElement("label");
+                labelDiv.className = "psychology-option";
+                labelDiv.style.display = "flex";
+                labelDiv.style.alignItems = "flex-start";
+                labelDiv.style.cursor = "pointer";
+                labelDiv.style.padding = "12px";
+                labelDiv.style.borderRadius = "10px";
+                labelDiv.style.fontSize = "13px";
+                labelDiv.style.background = "white";
+                labelDiv.style.border = "1px solid #E5E5EA";
+                labelDiv.style.width = "100%";
+                labelDiv.style.boxSizing = "border-box";
+                labelDiv.style.flexWrap = "wrap";
+
+                let radio = document.createElement("input");
+                radio.type = "radio";
+                radio.name = `q${idx}`;
+                radio.value = optIdx;
+                radio.style.marginRight = "10px";
+                radio.style.cursor = "pointer";
+                radio.style.marginTop = "2px";
+                radio.style.flexShrink = "0";
+
+                let textSpan = document.createElement("span");
+                textSpan.style.flex = "1";
+                textSpan.style.whiteSpace = "normal";
+                textSpan.style.wordBreak = "break-word";
+                textSpan.innerText = option;
+
+                labelDiv.appendChild(radio);
+                labelDiv.appendChild(textSpan);
+                
+                labelDiv.onmouseover = () => labelDiv.style.background = "rgba(0,94,84,0.08)";
+                labelDiv.onmouseout = () => labelDiv.style.background = "white";
+                
+                optionsDiv.appendChild(labelDiv);
+            });
+            
+            qDiv.appendChild(optionsDiv);
+            categoryDiv.appendChild(qDiv);
+        });
+        
+        form.appendChild(categoryDiv);
+    });
+    
+    document.getElementById("submitPsychology").style.display = "block";
+    document.getElementById("psychologyResult").innerHTML = "";
+}
+
+function submitPsychologyAssessment() {
+    let totalScore = 0;
+    let answered = 0;
+    
+    for(let i = 0; i < psychologyQuestions.length; i++) {
+        let radio = document.querySelector(`input[name="q${i}"]:checked`);
+        if(radio) {
+            totalScore += parseInt(radio.value);
+            answered++;
+        }
+    }
+    
+    if(answered < psychologyQuestions.length) {
+        showToast("请完成所有问卷");
+        return;
+    }
+    
+    // 根据分数判断等级
+    let result = {};
+    if(totalScore <= 10) {
+        result = psychologyInterpretation.excellent;
+    } else if(totalScore <= 20) {
+        result = psychologyInterpretation.good;
+    } else if(totalScore <= 30) {
+        result = psychologyInterpretation.moderate;
+    } else if(totalScore <= 40) {
+        result = psychologyInterpretation.poor;
+    } else {
+        result = psychologyInterpretation.critical;
+    }
+    
+    let resultDiv = document.getElementById("psychologyResult");
+    resultDiv.innerHTML = `
+        <div style='background:${result.color}; color:white; padding:16px; border-radius:12px; margin-bottom:12px;'>
+            <div style='font-weight:600; font-size:16px; margin-bottom:4px;'>📊 评估结果</div>
+            <div style='font-size:18px; margin-bottom:8px;'>总分：${totalScore} 分</div>
+            <div style='font-size:14px;'>${result.level}</div>
+        </div>
+        <div style='background:#F5F5F5; padding:12px; border-radius:8px; border-left:4px solid ${result.color}; margin-bottom:12px;'>
+            <div style='font-weight:600; color:#1C1C1E; margin-bottom:8px;'>💡 建议</div>
+            <div style='font-size:13px; color:#333; line-height:1.6;'>${result.advice}</div>
+        </div>
+        <div style='padding:12px; background:#E8F5E9; border-radius:8px; font-size:12px; color:#1B5E20;'>
+            <strong>📌 重要提示：</strong><br>本评估为初步心理状态筛查，不作为临床诊断依据。如有需要，请咨询专业心理咨询师或医疗人员。
+        </div>
+        <button onclick="savePsychologyAssessment(${totalScore}, '${result.level}')" style='margin-top:12px;'>💾 保存评估结果</button>
+    `;
+    
+    // 滚动到结果
+    resultDiv.scrollIntoView({behavior: 'smooth'});
+}
+
+function savePsychologyAssessment(score, level) {
+    let date = new Date().toISOString().split('T')[0];
+    let record = {
+        date: date,
+        symptom: "心理健康评估",
+        diagnosis: `心理状态评分：${score}分 - ${level}`,
+        advice: "建议定期进行心理健康自评，关注自身心理状态变化。",
+        deployment: currentDeployment,
+        predictedRecovery: score <= 20 ? 0 : (score <= 30 ? 14 : (score <= 40 ? 21 : 28)),
+        status: "已评估",
+        image: "",
+        completionPercent: 100
+    };
+    healthRecords.push(record);
+    showToast('已保存到健康档案');
+    
+    setTimeout(() => {
+        let resultDiv = document.getElementById("psychologyResult");
+        let noticeDiv = document.createElement("div");
+        noticeDiv.style.marginTop = "12px";
+        noticeDiv.style.padding = "12px";
+        noticeDiv.style.background = "#E8F5E9";
+        noticeDiv.style.borderRadius = "8px";
+        noticeDiv.style.color = "#1B5E20";
+        noticeDiv.style.fontSize = "13px";
+        noticeDiv.innerHTML = "✅ 评估结果已保存到您的健康档案";
+        resultDiv.appendChild(noticeDiv);
+    }, 500);
+}
+</script>
+
+</body>
+</html>
